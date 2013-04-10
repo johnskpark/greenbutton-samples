@@ -119,9 +119,14 @@ namespace FfmpegClient
         {
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsAsync<HttpError>();
-                Console.WriteLine("Failed with " + response.StatusCode + " " + response.ReasonPhrase + ": " + error.Message);
-                throw new WebException(error.Message);
+                var error = await response.Content.ReadAsAsync<Error>();
+                var message = error.Message;
+                if (error.ValidationErrors != null && error.ValidationErrors.Any())
+                {
+                    message = message + Environment.NewLine + String.Join(Environment.NewLine, error.ValidationErrors.Select(e => e.Name + ": " + e.Message));
+                }
+                Console.WriteLine("Failed with " + response.StatusCode + " " + response.ReasonPhrase + ": " + message);
+                throw new WebException(message);
             }
         }
     }
